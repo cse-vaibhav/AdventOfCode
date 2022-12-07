@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-def isSubset(p1: str, p2: str):
-    if p2 in p1 or p1 in p2:
-        return True
-    return False
-
 def part1():
     with open("input", 'r') as f:
         lines = f.readlines();
@@ -38,5 +33,6 @@ def part2():
             if len(p1.intersection(p2)) != 0:
                 cnt += 1
         print(cnt)
+
 
 part2();
