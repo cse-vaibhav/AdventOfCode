@@ -44,87 +44,50 @@ class Packet:
 
 	def __init__(self, packet):
 		Packet.packets.append(self)
-		self.packet = packet
-		self.packet_version = int(self.packet[:3],2)
-		self.type_id = int(self.packet[3:6],2)
-		if not self.isLiteral():
+		self.packet_version = int(packet[:3],2)
+		self.type_id = int(packet[3:6],2)
+        self.packet = packet[6:]
+        if self.isLiteral():
+            self.parseLiteral();
+
+        # operator
+		else:
+            self.parseOperator();
 			if self.packet[6] == '1':
 				self.sub_packets = self.get_subpackets_1()
 			else:
 				self.sub_packets = self.get_subpackets_0()
 
-	@staticmethod
-	def getLiteral(string):
-		version = string[:3]
-		type_id = string[3:6]
-		string = string[6:]
-		literal = version+type_id
-		k = 6
-		for i in range(0,len(string),5):
-			part = string[i:i+5]
-			k+=5
-			literal += part
-			if part[0] == 0:
-				break
-		return string, k
+    def parseOperator(self):
+        l_id = int(self.packet[0],2)
+        if (l_id == 0):
+            bit_len = int(self.packet[1:16], 2)
+            subpacks = self.packet[16:16+bit_len]
+        else:
+            n_subpack = int(self.packet[1:12], 2)
+            subpacks = self.packet[12:]
 
-	def get_subpackets_1(self):
-		packet = self.packet[7:]
-		sub_packets = []
-		n = int(packet[:11],2)
-		packet = packet[11:]
-		for i in range(n):
-			t_id = int(packet[3:6],2)
-			if t_id == 4:
-				sub_packet, k = getLiteral(packet)
-				sub_packets.append(Packet(sub_packet))
-				packet = packet[k:]
-			else:
-				l_id = packet[6]
-				if l_id == '0':
-					sub_packets.extend(self.get_subpackets_0())
+        parsePacket(subpacks)
+
+    def parsePacket(subpacks):
+        tp_id = int(subpacks[3:6],2)
 
 
-
-
-
-
-
-
-
-		# packet = packet[11:]
-		# for i in range(0,len(packet), len(packet)//n):
-		# 	sub_packets.append(Packet(packet[i:len(packet)//n]))
-		# return sub_packets
-
-	def get_subpackets_0(self):
-		packet = self.packet[7:]
-		sub_packets = []
-		count = int(packet[:15],2)
-		packet = packet[15:]
-		while(count != 0):
-			i = 6
-			if int(packet[3:6],2) == 4:
-				pckt = packet[6:]
-				for k in range(0, len(pckt), 5):
-					if len(pckt) >= 5:
-						part = pckt[k:k+5]
-						pckt = pckt[k+5:]
-						i += 5
-						if part[0] == '0':
-							sub_packets.append(Packet(packet[:i]))
-							count -= i
-							packet = packet[i:]
-							break
-			else:
-				sub_packets.append(Packet(packet))
-
-		return sub_packets
+    def parseLiteral(self):
+        self.data = ""
+        j = 0;
+        for i in range(0, len(self.packet), 5):
+            data = self.packet[i:i+5]
+            if (data[0] == '0'):
+                self.data += data[1:]
+                j = i+5
+                break
+            self.data += data[1:]
+        self.data = int(self.data, 2)
+        return self.packet[j:]
 
 	def isLiteral(self):
-		if self.type_id == 4:
-			return True
-		return False
+        return (self.type_id == 4);
 
 	def parse(self):
 		if self.isLiteral():
@@ -192,22 +155,19 @@ def part1():
 	res = 0
 	inp = open("input.txt", 'r').readline().strip()
 	packet = hexa_to_packet(inp)
-	res += int(packet[:3],2)
-	t_id = int(packet[3:6],2)
-	if t_id != 4:
-		l_id = packet[6]
-		if l_id == '0':
-			for sub_packet in get_subpackets_0(packet):
-				res += int(sub_packet[:3],2)
-		else:
-			for sub_packet in get_subpackets_1(packet):
-				res += int(sub_packet[:3],2)
-	return res
+
+	pkt = Packet()
+
+	# res += int(packet[:3],2)
+	# t_id = int(packet[3:6],2)
+	# if t_id != 4:
+	# 	l_id = packet[6]
+	# 	if l_id == '0':
+	# 		for sub_packet in get_subpackets_0(packet):
+	# 			res += int(sub_packet[:3],2)
+	# 	else:
+	# 		for sub_packet in get_subpackets_1(packet):
+	# 			res += int(sub_packet[:3],2)
+	# return res
 
 print(part1())
-
-
-
-		
-
-

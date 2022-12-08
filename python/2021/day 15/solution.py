@@ -1,3 +1,5 @@
+#!python
+
 import heapq
 from collections import defaultdict
 import numpy as np

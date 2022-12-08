@@ -115,5 +115,5 @@ def part2():
 	return step
 
 if __name__ == "__main__":
-	print(f"Part1 : {part1(195)}")
+	print(f"Part1 : {part1(100)}")
 	print(f"Part2 : {part2()}")

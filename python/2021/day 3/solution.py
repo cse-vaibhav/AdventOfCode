@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 def check_oxygen(oxygen_rating, row):
-	for x in raneg(len(oxygen_rating)):
+	for x in range(len(oxygen_rating)):
 		if (int(oxygen_rating[x]) != row[i]):
 			return False
 	return True
