@@ -3,13 +3,13 @@
 from rich import print
 from typing import Optional
 import sys
-
-sys.set_int_max_str_digits(5000)
+from math import lcm
+from functools import reduce
 
 class Monkey(object):
 
+    master_divisor: int;
     count: int = 0;
-
     def __init__(self) -> None:
         self.id = Monkey.count;
         self.inspections: int = 0;
@@ -52,26 +52,24 @@ class Monkey(object):
 
     # do the operation
     def doOperation(self, item: int, factor=1) -> int:
+        if item == 0:
+            return item;
         ro = item if self.right_operand == "old" else int(self.right_operand);
         if (self.operator == "*"):
-            return (item * ro) // factor
+            # return ( item * ro ) // factor
+            return ((item * ro) // factor) % Monkey.master_divisor
         else:
-            return (item + ro) // factor
-        # if (self.right_operand == "old"):
-        #     return eval( f"{item} {self.operator} {item}" )
-        # else:
-        #     return eval( f"{item} {self.operator} {self.right_operand}" );
+            # return ( item + ro ) // factor
+            return ((item + ro) // factor) % Monkey.master_divisor
+# 9699690
 
     # test the items
     def test(self, item: int) -> bool:
         return ( item % self._test_number ) == 0;
-        # return eval(f"({item} % {self._test_number}) == 0");
 
-
-    def throwItem(self) -> tuple[int, int]:
-        item = self._items[0];
-        item = self.doOperation(item, 3);
-        self._items = self._items[1:];
+    def throwItem(self, factor=1) -> tuple[int, int]:
+        item = self._items.pop(0);
+        item = self.doOperation(item, factor);
 
         # throw to monkey 1 else monkey 2
         self.inspections += 1
@@ -95,6 +93,7 @@ class Monkey(object):
 
             monkeyList: list = [];
             tmp_monkey: Monkey;
+            div_test: list[int] = [];
             for line in lines:
                 if line.startswith("Monkey"):
                     tmp_monkey = Monkey();
@@ -111,6 +110,7 @@ class Monkey(object):
                 elif line.startswith("Test"):
                     l = line.split();
                     tmp_monkey.set_test_number( int(l[-1]) )
+                    div_test.append( int(l[-1]) );
                 elif line.startswith("If true"):
                     l = line.split();
                     tmp_monkey.set_true( int(l[-1]) )
@@ -118,7 +118,9 @@ class Monkey(object):
                     l = line.split();
                     tmp_monkey.set_false( int(l[-1]) )
                     monkeyList.append(tmp_monkey)
-            print(line)
+
+            cls.master_divisor = reduce(lcm, div_test);
+            print(cls.master_divisor)
             return monkeyList;
 
     @classmethod
@@ -129,8 +131,24 @@ class Monkey(object):
                 monkey = monkeys[i];
                 m = len(monkey.getItems());
                 for _ in range(m):
-                    item, to = monkey.throwItem();
+                    item, to = monkey.throwItem(3);
                     monkeys[to]._items.append(item);
+        inspections = []
+        for monkey in monkeys:
+            print( monkey.id, monkey.inspections )
+            inspections.append( monkey.inspections );
+        inspections.sort();
+        print(inspections[-2] * inspections[-1])
+
+    @classmethod
+    def simulate_part2(cls, monkeys: list[object], rounds:int) -> None:
+        for _ in range(rounds):
+            # iterate over monkeys
+            for monkey in monkeys:
+                while monkey._items:
+                    item, to = monkey.throwItem(1);
+                    monkeys[to]._items.append(item);
+
         inspections = []
         for monkey in monkeys:
             print( monkey.id, monkey.inspections )
@@ -141,4 +159,4 @@ class Monkey(object):
 
 # monkeys = Monkey.parse_monkeys("input");
 monkeys = Monkey.parse_monkeys("input");
-Monkey.simulate_part1(monkeys, 20)
+Monkey.simulate_part2(monkeys, 10000)
