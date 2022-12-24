@@ -69,6 +69,7 @@ class Elf:
                 case2 = True
                 self.proposed = self.pos
                 break
+
         if case2:
             groups: list = Elf.groups.copy()
 
@@ -76,11 +77,12 @@ class Elf:
                 occupied: bool = False
                 for d in group:
                     x, y = self.pos
-                    x = (x + dirs[d][0]) % rows
-                    y = (y + dirs[d][1]) % cols
-                    if grove[x][y] == '#':
-                        occupied = True
-                        break
+                    x = (x + dirs[d][0])
+                    y = (y + dirs[d][1])
+                    if checkBounds((x, y)):
+                        if grove[x][y] == '#':
+                            occupied = True
+                            break
                 if occupied:
                     continue
 
@@ -88,11 +90,11 @@ class Elf:
                 first: tuple = dirs[group[0]]
 
                 # check if out of boundary
-                if not checkBounds(((x + first[0]) % rows, (y + first[1]) % cols)):
+                if not checkBounds(((x + first[0]), (y + first[1]))):
                     continue
 
                 # propose that spot
-                self.proposed = ((x+first[0]) % rows, (y+first[1]) % cols)
+                self.proposed = ((x+first[0]), (y+first[1]))
                 break
 
         Elf.mark(self.proposed)

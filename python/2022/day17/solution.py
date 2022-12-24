@@ -128,8 +128,4 @@ class Part1:
 if __name__ == "__main__":
     part1 = Part1();
     part1.solve();
-
-
-    
-
     

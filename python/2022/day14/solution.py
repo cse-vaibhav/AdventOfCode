@@ -2,6 +2,7 @@
 
 import sys
 from rich import print
+# import pandas as pd
 
 class Point:
     def __init__(self, x: int=0, y: int=0):
@@ -9,11 +10,16 @@ class Point:
         self._y: int = y;
 
     def __eq__(self, other):
-        # print(self, other)
         return self._x == other._x and self._y == other._y;
 
+    # def __cmd__(self, other):
+    #     return
+
+    # def __ne__(self, other):
+    #     return hash(repr(self)) != hash(repr(other));
+
     def __str__(self):
-        return f" Point {self._x} {self._y} "
+        return f" Point {self._x} {self._y} ";
 
     def getX(self) -> int:
         return self._x;
@@ -37,32 +43,23 @@ class Rock(Point):
 class Sand(Point):
     def __init__(self, x: int, y: int) -> None:
         super().__init__(x, y);
-        self._rest: bool = False;
 
     def __str__(self):
         return f" Sand {self._x} {self._y} "
 
-    def setRest(self, rest: bool) -> None:
-        self._rest = rest;
-
-    def getRest(self) -> bool:
-        return self._rest;
-
 class Cave:
 
     def __init__(self):
-        self.source: Point = Point(500, 0);
-        self.rocks: list[Rock] = []
-        self.sand: list[Sand] = []
+        self.source: list= Point(500, 0);
+        self.occupied: list[Point] = [];
         self.bounds: list[tuple[int, int]] = []
 
-    def check_bounds(self, x: int, y: int) -> bool:
+    # part1
+    def check_bounds_part1(self, x: int, y: int) -> bool:
         if x in self.bounds[0] or y in self.bounds[1]:
             return False
         return True;
 
-
-    # part1
     def generateMap_part1(self) -> None:
         if (len(sys.argv) == 1):
             print(" No Input!! ");
@@ -78,7 +75,6 @@ class Cave:
             lines = inp.readlines();
             for line in lines:
                 l = line.strip().split(' -> ');
-                # print(l)
                 for i in range(1,len(l)):
                     x0, y0 = map(int, l[i-1].split(','))
                     x1, y1 = map(int, l[i].split(','))
@@ -86,38 +82,36 @@ class Cave:
                     maxx = max([x0, x1, maxx]);
                     maxy = max([y0, y1, maxy]);
 
-                    # print(x0, y0, x1, y1)
                     if x0 == x1:
                         for y in range(min(y0,y1), max(y1,y0)+1):
                             rock = Rock( x0, y );
-                            if (rock not in self.rocks):
-                                self.rocks.append( rock );
+                            if (rock not in self.occupied):
+                                self.occupied.append( rock );
                     elif y0 == y1:
                         for x in range(min(x0,x1), max(x0,x1)+1):
                             rock = Rock( x, y0 );
-                            if (rock not in self.rocks):
-                                self.rocks.append( rock );
+                            if (rock not in self.occupied):
+                                self.occupied.append( rock );
 
         self.bounds = [ (minx-1,maxx+1), (miny-1, maxy+1) ];
     def dropSand_part1(self) -> bool:
-        x, y = 500, 1;
+        x, y = 500, 0;
         while (True):
             # down
-            # print( x, y )
-            if not self.check_bounds(x, y):
+            if not self.check_bounds_part1(x, y):
                 return False;
-            elif not Rock(x, y+1) in self.rocks and not Sand(x, y+1) in self.sand:
+            elif not Rock(x, y+1) in self.occupied and not Sand(x, y+1) in self.occupied:
                 y = y + 1;
             # slide left diagonally
-            elif not Rock(x-1,y+1) in self.rocks and not Sand(x-1, y+1) in self.sand:
+            elif not Rock(x-1,y+1) in self.occupied and not Sand(x-1, y+1) in self.occupied:
                 x = x - 1;
                 y = y + 1;
             # slide right diagonally
-            elif not Rock(x+1, y+1) in self.rocks and not Sand(x+1,y+1) in self.sand:
+            elif not Rock(x+1, y+1) in self.occupied and not Sand(x+1,y+1) in self.occupied:
                 x = x + 1;
                 y = y + 1;
             else:
-                self.sand.append( Sand(x, y) );
+                self.occupied.add( Sand(x, y) );
                 break;
         return True;
 
@@ -125,73 +119,105 @@ class Cave:
         units: int = 0;
         while (self.dropSand_part1()):
             units += 1;
-        print(units);
-
 
     # part2
+    def check_bounds_part2(self, x: int, y: int) -> bool:
+
+        if x < self.bounds[0][0]:
+            bound = (x, self.bounds[0][1]);
+            self.bounds[0] = bound
+            rock = Rock(x, self.bounds[1][1]);
+            if rock not in self.occupied:
+                self.occupied.append(rock);
+
+        elif x > self.bounds[0][1]:
+            bound = (self.bounds[0][0], x);
+            self.bounds[0] = bound
+            rock = Rock(x, self.bounds[1][1]);
+            if rock not in self.occupied:
+                self.occupied.append(rock);
+
+
+        if y in self.bounds[1]:
+            return False
+        return True;
+
     def generateMap_part2(self) -> None:
         if (len(sys.argv) == 1):
             print(" No Input!! ");
             return None;
 
-        minx: int = 99999;
-        miny: int = 0;
-        maxx: int = -1;
-        maxy: int = -1;
+        xmin: int = 99999;
+        xmax: int = -1;
+        ymax: int = -1;
+        ymin: int = -1;
 
         filename = sys.argv[1];
         with open(filename, 'r') as inp:
             lines = inp.readlines();
             for line in lines:
                 l = line.strip().split(' -> ');
-                # print(l)
                 for i in range(1,len(l)):
                     x0, y0 = map(int, l[i-1].split(','))
                     x1, y1 = map(int, l[i].split(','))
-                    maxy = max([y0, y1, maxy]);
+                    ymax = max([y0, y1, ymax]);
+                    xmax = max([x0, x1, xmax]);
+                    xmin = min([x0, x1, xmin]);
 
-                    # print(x0, y0, x1, y1)
                     if x0 == x1:
                         for y in range(min(y0,y1), max(y1,y0)+1):
                             rock = Rock( x0, y );
-                            if (rock not in self.rocks):
-                                self.rocks.append( rock );
+                            if (rock not in self.occupied):
+                                self.occupied.append( rock );
                     elif y0 == y1:
                         for x in range(min(x0,x1), max(x0,x1)+1):
                             rock = Rock( x, y0 );
-                            if (rock not in self.rocks):
-                                self.rocks.append( rock );
+                            if (rock not in self.occupied):
+                                self.occupied.append( rock );
 
-        self.bounds = [ (miny-2, maxy+2) ];
+            ymax += 2
+            xmin *= 2;
+            xmax *= 2
+            for x in range(xmin, xmax):
+                rock = Rock( x, ymax );
+                if rock not in self.occupied:
+                    self.occupied.append( rock );
+            self.bounds = [ (xmin, xmax), (ymin, ymax) ];
 
     def dropSand_part2(self) -> bool:
-        x, y = 500, 1;
-        while (True):
-            # down
-            # print( x, y )
-            if not self.check_bounds(x, y):
+
+        x = self.last_loc.getX();
+        y = self.last_loc.getY();
+        while True:
+            if not self.check_bounds_part2(x, y):
                 return False;
-            elif not Rock(x, y+1) in self.rocks and not Sand(x, y+1) in self.sand:
+
+            # down
+            if Point(x, y+1) not in self.occupied:
                 y = y + 1;
             # slide left diagonally
-            elif not Rock(x-1,y+1) in self.rocks and not Sand(x-1, y+1) in self.sand:
+            elif Point(x-1, y+1) not in self.occupied:
                 x = x - 1;
                 y = y + 1;
             # slide right diagonally
-            elif not Rock(x+1, y+1) in self.rocks and not Sand(x+1,y+1) in self.sand:
+            elif Point(x+1,y+1) not in self.occupied:
                 x = x + 1;
                 y = y + 1;
             else:
-                self.sand.append( Sand(x, y) );
+                self.occupied.append( Point(x, y) );
                 break;
+
         return True;
 
     def simulate_part2(self) -> None:
         units: int = 0;
-        while (self.dropSand_part2()):
-            units += 1;
+        while (self.source not in self.occupied):
+            self.last_loc: Point = Point(500, 0);
+            if (self.dropSand_part2()):
+                units += 1;
+                print(units);
         print(units);
 
 cave = Cave();
-cave.generateMap_part1();
-cave.simulate_part1();
+cave.generateMap_part2();
+cave.simulate_part2();
