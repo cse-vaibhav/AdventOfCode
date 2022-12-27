@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from functools import reduce
 import rich
@@ -10,11 +9,11 @@ class Elf:
 
     proposed: defaultdict = defaultdict(int)
     groups: list[tuple[str]] = [
-                ("N", "NE", "NW"),
-                ("S", "SE", "SW"),
-                ("W", "NW", "SW"),
-                ("E", "NE", "SE")
-                ]
+        ("N", "NE", "NW"),
+        ("S", "SE", "SW"),
+        ("W", "NW", "SW"),
+        ("E", "NE", "SE"),
+    ]
 
     @classmethod
     def getProposed(cls, pos: tuple):
@@ -47,16 +46,19 @@ class Elf:
                 return False
             return True
 
-        dirs: defaultdict = defaultdict(tuple, {
-            "N": (-1, 0),
-            "S": (1, 0),
-            "E": (0, 1),
-            "W": (0, -1),
-            "NW": (-1, -1),
-            "NE": (-1, 1),
-            "SE": (1, 1),
-            "SW": (1, -1)
-            })
+        dirs: defaultdict = defaultdict(
+            tuple,
+            {
+                "N": (-1, 0),
+                "S": (1, 0),
+                "E": (0, 1),
+                "W": (0, -1),
+                "NW": (-1, -1),
+                "NE": (-1, 1),
+                "SE": (1, 1),
+                "SW": (1, -1),
+            },
+        )
 
         # check if elves are around
         x, y = self.pos
@@ -65,7 +67,7 @@ class Elf:
         case2: bool = False
         for d in values:
             dest = (x + d[0], y + d[1])
-            if checkBounds(dest) and grove[dest[0]][dest[1]] == '#':
+            if checkBounds(dest) and grove[dest[0]][dest[1]] == "#":
                 case2 = True
                 self.proposed = self.pos
                 break
@@ -77,10 +79,10 @@ class Elf:
                 occupied: bool = False
                 for d in group:
                     x, y = self.pos
-                    x = (x + dirs[d][0])
-                    y = (y + dirs[d][1])
+                    x = x + dirs[d][0]
+                    y = y + dirs[d][1]
                     if checkBounds((x, y)):
-                        if grove[x][y] == '#':
+                        if grove[x][y] == "#":
                             occupied = True
                             break
                 if occupied:
@@ -94,7 +96,7 @@ class Elf:
                     continue
 
                 # propose that spot
-                self.proposed = ((x+first[0]), (y+first[1]))
+                self.proposed = ((x + first[0]), (y + first[1]))
                 break
 
         Elf.mark(self.proposed)
@@ -107,15 +109,14 @@ class Elf:
         # rich.print(self.proposed)
 
         x, y = self.pos
-        grove[x][y] = '.'
+        grove[x][y] = "."
         self.pos = self.proposed
 
         x, y = self.pos
-        grove[x][y] = '#'
+        grove[x][y] = "#"
 
 
 class Part1:
-
     def __init__(self):
         self.grove: list = []
         self.rows: int = 0
@@ -124,7 +125,7 @@ class Part1:
 
     def parseInput(self):
         filename = sys.argv[1]
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             for line in f.readlines():
                 self.grove.append(list(line.strip()))
 
@@ -133,9 +134,9 @@ class Part1:
         # rich.print(self.grove)
 
     def writeGrove(self):
-        with open("grove.txt", 'w') as f:
+        with open("grove.txt", "w") as f:
             for row in self.grove:
-                f.write("".join(row) + '\n')
+                f.write("".join(row) + "\n")
 
     def solve(self):
         rounds: int = int(sys.argv[2])
@@ -149,7 +150,7 @@ class Part1:
         # make elves
         for i in range(self.rows):
             for j in range(self.cols):
-                if self.grove[i][j] == '#':
+                if self.grove[i][j] == "#":
                     elf: Elf = Elf()
                     elf.pos = (i, j)
                     elf.proposed = (i, j)
@@ -157,6 +158,7 @@ class Part1:
 
         for r in range(rounds):
             print(Elf.groups)
+
             # first half
             for elf in elves:
                 elf.propose(self.grove)
@@ -178,7 +180,7 @@ class Part1:
             maxy = max(maxy, j)
 
         print(minx, maxx, miny, maxy, len(elves))
-        ans: int = (maxx-minx+1) * (maxy-miny+1) - len(elves)
+        ans: int = (maxx - minx + 1) * (maxy - miny + 1) - len(elves)
         print(ans)
 
 
